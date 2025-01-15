@@ -1,0 +1,139 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject INotificationService NotificationService;
+@using BlazorApp1.Models
+@using System.Text.Json
+
+<PageTitle>Weather App</PageTitle>
+
+<div class="main-header">
+    <h1>Weather API</h1>
+</div>
+
+<div class="form-container">
+    <h3>Информация о погоде</h3>
+    <div>
+        <label>Название города:</label>
+        <input type="text" @bind="cityName" placeholder="Введите название" />
+    </div>
+    <button @onclick="GetWeather" style="margin-top: 10px; margin:0 auto;">Получить информацию</button>
+</div>
+
+@if (weatherData != null && weatherData.Location != null && weatherData.Current != null)
+{
+    <div class="response-container" style="margin-top: 20px; padding: 10px; background-color: #f9f9f9;">
+        <h3>Информация о погоде в @weatherData.Location.Name (@weatherData.Location.Country):</h3>
+        <p><strong>Температура:</strong> @(weatherData.Current.Temp_C?.ToString("F1")) °C</p>
+        <p><strong>Состояние:</strong> @weatherData.Current.Condition?.Text</p>
+        <p><strong>Скорость ветра:</strong> @(weatherData.Current.Wind_Kph?.ToString("F1")) kph</p>
+        <p><strong>Время:</strong> @weatherData.Location.Localtime </p>
+    </div>
+}
+
+@if (countryData != null)
+{
+    <div class="response-container" style="margin-top: 20px; padding: 10px; background-color: #f9f9f9;">
+        <h3>Информация о стране:</h3>
+        <p><strong>Название страны:</strong> @countryData.CountryName</p>
+        <p><strong>Код страны:</strong> @countryData.CountryCode</p>
+        <p><strong>Город:</strong> @countryData.Name</p>
+        <p><strong>Численность населения:</strong> @(countryData.Population.HasValue ? countryData.Population.Value.ToString("#,0") : "Не указано")</p>
+    </div>
+}
+
+@code {
+    private string cityName = string.Empty;
+    private WeatherData? weatherData = null;
+    private Geoname? countryData = null;  // Изменено на Geoname
+
+    private string weatherApiUrl = "https://weatherapi-production-57a3.up.railway.app/WeatherForecast/GetWeather/{0}";
+    private string geoNamesApiUrl = "http://api.geonames.org/searchJSON?q={0}&username=limston&maxRows=1";
+
+    private async Task GetWeather()
+    {
+        if (string.IsNullOrWhiteSpace(cityName))
+        {
+            await NotificationService.Warning("Введите название города");
+            return;
+        }
+
+        // Получение информации о погоде
+        await FetchWeatherData();
+
+        // Получение информации о стране
+        await FetchCountryData();
+    }
+
+    private async Task FetchWeatherData()
+    {
+        try
+        {
+            var response = await Http.GetAsync(string.Format(weatherApiUrl, cityName));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                weatherData = JsonSerializer.Deserialize<WeatherData>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+
+                if (weatherData != null)
+                {
+                    await NotificationService.Success("Данные о погоде успешно получены!");
+                }
+                else
+                {
+                    await NotificationService.Error("Не удалось проанализировать данные о погоде.");
+                }
+            }
+            else
+            {
+                await NotificationService.Error($"Не удалось получить данные о погоде. Статус: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await NotificationService.Error($"Произошла ошибка: {ex.Message}");
+        }
+    }
+
+    private async Task FetchCountryData()
+    {
+        try
+        {
+            var response = await Http.GetAsync(string.Format(geoNamesApiUrl, cityName));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var geoNamesResponse = JsonSerializer.Deserialize<GeoNamesResponse>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+
+                // Проверяем, есть ли данные о геонемах и присваиваем их
+                if (geoNamesResponse != null && geoNamesResponse.Geonames.Length > 0)
+                {
+                    countryData = geoNamesResponse.Geonames[0]; // Используем Geoname
+
+                    // Выводим информацию о населении
+                    var cityPopulation = countryData.Population != null ? countryData.Population.Value.ToString("#,0") : "Не указано";
+                    await NotificationService.Success("Данные о городе успешно получены!");
+                }
+                else
+                {
+                    await NotificationService.Error("Не удалось получить данные о стране.");
+                }
+            }
+            else
+            {
+                await NotificationService.Error($"Не удалось получить данные о стране. Статус: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await NotificationService.Error($"Произошла ошибка в GeoNames: {ex.Message}");
+        }
+    }
+}

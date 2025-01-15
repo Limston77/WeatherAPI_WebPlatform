@@ -1,0 +1,127 @@
+﻿body {
+    font-family: 'Roboto', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #647991 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.main-header {
+    position: fixed; /* Фиксируем заголовок в верхней части */
+    top: 0; /* Располагаем у верхнего края страницы */
+    width: 100%; /* Заголовок занимает всю ширину страницы */
+    text-align: center; /* Центрирование текста */
+    background-color: #eaf2f8; /* Светлый фон для заголовка */
+    padding: 20px 0; /* Отступы сверху и снизу */
+    
+    z-index: 1000; /* Чтобы заголовок был поверх других элементов */
+}
+
+    .main-header h1 {
+        font-size: 36px; /* Размер текста */
+        color: #647991 !important; /* Темно-синий цвет текста */
+        font-weight: bold; /* Полужирный текст */
+        letter-spacing: 2px; /* Расстояние между буквами */
+        text-transform: uppercase; /* Все буквы заглавные */
+        margin: 0; /* Убираем стандартные отступы */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Легкая тень для текста */
+    }
+
+h3, h4 {
+    text-align: center;
+    color: #4a4a4a;
+}
+
+.form-container, .response-container {
+    width: 400px; /* Убедитесь, что ширина одинакова */
+    background: #eaf2f8 !important;
+    border: 1px solid #ccc;
+    border-radius: 12px; /* Установить радиус скругления на 12px */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px auto;
+    text-align: left;
+    min-height: 300px; /* Установите минимальную высоту, чтобы элементы были одинаковыми */
+}
+
+.form-container div{
+    padding-top:15px;
+}
+
+    .form-container h3 {
+        font-size: 24px;
+        color: #5d5d5d;
+        margin-bottom: 15px;
+    }
+
+    .response-container h4 {
+        font-size: 20px;
+        color: #5d5d5d;
+        margin-bottom: 10px;
+    }
+
+    /* Стили для полей ввода */
+    .form-container input[type="text"],
+    .form-container input[type="number"],
+    .form-container input[type="date"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #d3d3d3;
+        border-radius: 8px;
+        font-size: 16px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Стили для кнопок */
+    .form-container button {
+        display: inline-block;
+        background-color: #5a98f2; /* Голубой цвет для кнопок */
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        margin: 0 auto; /* Центрирование кнопки */
+        text-align: center; /* Центрирует текст внутри кнопки */
+        width:100%;
+    }
+
+        .form-container button:hover {
+            background-color: #4071d4; /* Более темный оттенок голубого при наведении */
+            transform: translateY(-2px); /* Легкий эффект при наведении */
+        }
+
+/* Акцентная кнопка */
+.primary-btn {
+    background-color: #4caf50; /* Зеленый цвет для отправки */
+    margin-left: 10px;
+}
+
+    .primary-btn:hover {
+        background-color: #3e8e41;
+    }
+
+/* Стили для контейнера с ответом */
+.response-container p {
+    font-size: 16px;
+    color: #5d5d5d;
+    background: #eaf2f8 !important;
+    margin: 8px 0;
+}
+
+.response-container {
+    text-align: center;
+}
+
+    .response-container p {
+        background: #f8f8f8;
+        padding: 10px;
+     
+    }
