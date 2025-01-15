@@ -6,6 +6,7 @@
 # Этот этап используется при запуске из VS в быстром режиме (по умолчанию для конфигурации отладки)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
+USER app
 EXPOSE 8080
 
 
