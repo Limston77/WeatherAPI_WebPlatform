@@ -55,3 +55,5 @@
     - `Name`: Название города.
     - `Population`: Численность населения.
 
+## Запуск
+- **URL**: weatherapiwebplatform-production.up.railway.app
