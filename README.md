@@ -55,6 +55,57 @@
     - `Name`: Название города.
     - `Population`: Численность населения.
 
+### API Endpoints
+### Weather API
+Пример запроса: https://weatherapi-production-57a3.up.railway.app/WeatherForecast/GetWeather/{Таганрог}
+```
+{
+  "location": {
+    "name": "Таганрог",
+    "localtime": "2025-01-16 11:25",
+    "region": "Rostov",
+    "country": "Россия"
+  },
+  "current": {
+    "temp_C": 1.2,
+    "condition": {
+    "text": "Солнечно"
+    },
+    "wind_Kph": 13
+  }
+}
+```
+
+### GeoNames API
+Пример запроса:http://api.geonames.org/searchJSON?q={Таганрог}&username=limston&maxRows=1
+```
+{
+  "totalResultsCount": 13,
+  "geonames": [
+    {
+      "adminCode1": "61",
+      "lng": "38.9053",
+      "geonameId": 484907,
+      "toponymName": "Taganrog",
+      "countryId": "2017370",
+      "fcl": "P",
+      "population": 279056,
+      "countryCode": "RU",
+      "name": "Taganrog",
+      "fclName": "city, village,...",
+      "adminCodes1": {
+        "ISO3166_2": "ROS"
+      },
+      "countryName": "Russia",
+      "fcodeName": "populated place",
+      "adminName1": "Rostov",
+      "lat": "47.23627",
+      "fcode": "PPL"
+    }
+  ]
+}
+```
+
 ## Запуск через Railway
 Вставить в поисковую строку:
-- **URL**: weatherapiwebplatform-production.up.railway.app
+- **URL**: http://weatherapiwebplatform-production.up.railway.app
