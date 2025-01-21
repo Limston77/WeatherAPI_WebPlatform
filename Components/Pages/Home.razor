@@ -1,8 +1,9 @@
 ﻿@page "/"
 @inject HttpClient Http
-@inject INotificationService NotificationService;
+@inject INotificationService NotificationService
 @using BlazorApp1.Models
 @using System.Text.Json
+@using System.Collections.Generic
 
 <PageTitle>Weather App</PageTitle>
 
@@ -10,15 +11,40 @@
     <h1>Weather API</h1>
 </div>
 
+<!-- Ввод названия города и кнопки для получения информации и добавления города в избранное -->
 <div class="form-container">
     <h3 style="color: black !important;">Информация о погоде</h3>
     <div>
         <label>Название города:</label>
         <input type="text" @bind="cityName" placeholder="Введите название" />
     </div>
-    <button @onclick="GetWeather" style="margin-top: 10px; margin:0 auto;">Получить информацию</button>
+    <button @onclick="GetWeather" style="margin-top: 10px; margin:0 auto;">
+        Получить информацию
+    </button>
+    <button @onclick="AddToFavorites" style="margin-top: 10px;">
+        Добавить в избранное
+    </button>
 </div>
 
+<!-- Отображение списка избранных городов и кнопки для получения погоды и удаления каждого города -->
+@if (favorites.Count > 0)
+{
+    <div class="response-container" style="margin-top: 20px;">
+        <h3>Избранные города:</h3>
+        
+            @foreach (var favorite in favorites)
+            {
+                <p>
+                    @favorite
+                    <button @onclick="() => RemoveFromFavorites(favorite)" style="margin-left: 10px;">Удалить</button>
+                    <button @onclick="() => GetWeatherForCity(favorite)" style="margin-left: 10px;">Показать погоду</button>
+                </p>
+            }
+        
+    </div>
+}
+
+<!-- Отображение информации о погоде, если она успешно получена -->
 @if (weatherData != null && weatherData.Location != null && weatherData.Current != null)
 {
     <div class="response-container" style="margin-top: 20px; padding: 10px; background-color: #f9f9f9;">
@@ -30,6 +56,7 @@
     </div>
 }
 
+<!-- Отображение информации о стране, если она успешно получена -->
 @if (countryData != null)
 {
     <div class="response-container" style="margin-top: 20px; padding: 10px; background-color: #f9f9f9;">
@@ -42,13 +69,21 @@
 }
 
 @code {
-    private string cityName = string.Empty;
-    private WeatherData? weatherData = null;
-    private Geoname? countryData = null;  // Изменено на Geoname
+    private string cityName = string.Empty; // Переменная для хранения названия города, введенного пользователем
+    private WeatherData? weatherData = null; // Переменная для хранения данных о погоде
+    private Geoname? countryData = null; // Переменная для хранения данных о стране
 
+    private List<string> favorites = new List<string>(); // Список избранных городов
+    private const int MaxFavorites = 5; // Максимальное количество избранных городов
+
+    // URL для получения данных о погоде и стране
     private string weatherApiUrl = "https://weatherapi-production-57a3.up.railway.app/WeatherForecast/GetWeather/{0}";
     private string geoNamesApiUrl = "http://api.geonames.org/searchJSON?q={0}&username=limston&maxRows=1";
 
+    // Свойство, указывающее, достигнут ли лимит на количество избранных городов
+    private bool isFavoriteFull => favorites.Count >= MaxFavorites;
+
+    // Метод для получения данных о погоде и стране
     private async Task GetWeather()
     {
         if (string.IsNullOrWhiteSpace(cityName))
@@ -57,30 +92,32 @@
             return;
         }
 
-        // Получение информации о погоде
-        await FetchWeatherData();
+        weatherData = null; // Сброс предыдущих данных о погоде
+        countryData = null; // Сброс предыдущих данных о стране
 
-        // Получение информации о стране
-        await FetchCountryData();
+        await FetchWeatherData(); // Вызов метода для получения данных о погоде
+        await FetchCountryData(); // Вызов метода для получения данных о стране
     }
 
-    private async Task FetchWeatherData()
+    // Метод для получения данных о погоде с сервера
+    private async Task FetchWeatherData(string city = "")
     {
         try
         {
-            var response = await Http.GetAsync(string.Format(weatherApiUrl, cityName));
+            var cityQuery = string.IsNullOrWhiteSpace(city) ? cityName : city; // Определение названия города для запроса
+            var response = await Http.GetAsync(string.Format(weatherApiUrl, cityQuery));
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 weatherData = JsonSerializer.Deserialize<WeatherData>(responseContent, new JsonSerializerOptions
                     {
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Использование camelCase для имен свойств
                     });
 
                 if (weatherData != null)
                 {
-                    await NotificationService.Success("Данные о погоде успешно получены!");
+                    await NotificationService.Success($"Данные о погоде для {cityQuery} успешно получены!");
                 }
                 else
                 {
@@ -98,32 +135,30 @@
         }
     }
 
-    private async Task FetchCountryData()
+    // Метод для получения данных о стране с сервера
+    private async Task FetchCountryData(string city = "")
     {
         try
         {
-            var response = await Http.GetAsync(string.Format(geoNamesApiUrl, cityName));
+            var cityQuery = string.IsNullOrWhiteSpace(city) ? cityName : city; // Определение названия города для запроса
+            var response = await Http.GetAsync(string.Format(geoNamesApiUrl, cityQuery));
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var geoNamesResponse = JsonSerializer.Deserialize<GeoNamesResponse>(responseContent, new JsonSerializerOptions
                     {
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Использование camelCase для имен свойств
                     });
 
-                // Проверяем, есть ли данные о геонемах и присваиваем их
                 if (geoNamesResponse != null && geoNamesResponse.Geonames.Length > 0)
                 {
-                    countryData = geoNamesResponse.Geonames[0]; // Используем Geoname
-
-                    // Выводим информацию о населении
-                    var cityPopulation = countryData.Population != null ? countryData.Population.Value.ToString("#,0") : "Не указано";
-                    await NotificationService.Success("Данные о городе успешно получены!");
+                    countryData = geoNamesResponse.Geonames[0];
+                    await NotificationService.Success($"Данные о городе {cityQuery} успешно получены!");
                 }
                 else
                 {
-                    await NotificationService.Error("Не удалось получить данные о стране.");
+                    await NotificationService.Error($"Не удалось получить данные о стране для {cityQuery}.");
                 }
             }
             else
@@ -135,5 +170,47 @@
         {
             await NotificationService.Error($"Произошла ошибка в GeoNames: {ex.Message}");
         }
+    }
+
+    // Метод для добавления города в избранное
+    private async Task AddToFavorites()
+    {
+        // Проверка на достижение лимита избранных городов
+        if (isFavoriteFull)
+        {
+            await NotificationService.Warning("Максимальное количество избранных городов (5) достигнуто.");
+            return;
+        }
+
+        // Проверка на пустое название города
+        if (string.IsNullOrWhiteSpace(cityName))
+        {
+            await NotificationService.Warning("Нет названия города для добавления в избранное.");
+            return;
+        }
+
+        // Проверка на наличие города в списке избранных городов
+        if (favorites.Contains(cityName))
+        {
+            await NotificationService.Warning("Город уже в списке избранного.");
+            return;
+        }
+
+        // Добавление города в избранное и уведомление пользователя
+        favorites.Add(cityName);
+        await NotificationService.Success("Город добавлен в избранное.");
+    }
+
+    // Метод для удаления города из избранного
+    private void RemoveFromFavorites(string city)
+    {
+        favorites.Remove(city);
+    }
+
+    // Метод для получения погоды для города из избранного
+    private async Task GetWeatherForCity(string city)
+    {
+        cityName = city;
+        await GetWeather();
     }
 }
